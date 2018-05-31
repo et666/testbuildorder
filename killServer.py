@@ -7,24 +7,18 @@ import subprocess
 @route('/startProcess/<processName>')
 def startProcess(processName):
     result = []
-    process = subprocess.Popen(processName,
-                               shell=True,
-                               stdout=subprocess.PIPE,
-                               stderr=subprocess.PIPE)
-    for line in process.stdout:
-        result.append(line)
+    process = subprocess.Popen(processName)
     
     errcode = process.returncode
    
     if errcode is not None:
-        return 'FAILED to start: ' + processName + ' /n ' + result
+        return 'FAILED to start: ' + processName
 
-    return 'Start Process: ' + processName + ' /n ' + result
+    return 'Start Process: ' + processName
 
 @route('/killProcess/<processName>')
 def killProcess(processName):
-    handle = subprocess.Popen(processName, shell=False)
-    subprocess.Popen("taskkill /F /T /PID %i"%handle.pid , shell=True)
+    subprocess.Popen("taskkill /F /IM " + processName , shell=True)
 
     return 'Tried to kill: ' + processName
 
@@ -47,4 +41,4 @@ def killProcess(processName):
 def error404(error):
     return '404 error !!!!!'
 
-run(host='localhost', port=8002, reloader=True)
+run(host='localhost', port=8003, reloader=True)
