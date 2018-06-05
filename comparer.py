@@ -1,29 +1,52 @@
 
 import sys, re
 import git
+from time import gmtime, strftime
 
 def findHighestTag(component):
     print 'findHighestTag'
     repo = git.Repo(component)
     tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
     latest_tag = tags[-1]
-    return latest_tag
+    return str(latest_tag)
+
+def getNewerTag(component):
+    tag = findHighestTag(component)
+
+    print 'Old Tag was: ' + tag
+    p = re.compile('v(\d*).(\d*).(\d*)')
+    erg = p.findall(tag)
+    if erg[0][0] == '0':
+        return 'v1.0.0'
+    #increase patch
+    patch = int(erg[0][2]) + 1
+    return 'v' + erg[0][0] + '.' + erg[0][1] + '.' + str(patch)
 
 def checkout(component):
     print 'checkout'
 
-def change(component):
-    print 'change' 
+def changeAndCommit(component):
+    file = open(component + '/text.txt', 'w')
+    file.write(strftime("%Y-%m-%d %H:%M:%S", gmtime()))
+    file.close()
+    obj = git.Repo(component)
+    obj.index.commit("Automatic Commit")
+
+    print 'changeAndCommit' 
 
 def tag(component):
-    tag = findHighestTag(component)
-    print tag
-    p = re.compile('v(\d*).(\d*).(\d*)')
-    erg = p.match(tag)
-    print erg
-    print 'tag' 
+    newTag = getNewerTag(component)
+    obj = git.Repo(component)
+    obj.create_tag(newTag)
+    print 'New Tag is: ' + newTag
+    return newTag
 
-def push(component):
+def push(component, tag):
+    obj = git.Repo(component)
+    obj.remotes.origin.push()
+
+    #obj.origin.push("origin", "HEAD:refs/for/master")
+
     print 'push' 
 
 def cleanFolder():
@@ -58,9 +81,9 @@ def main():
         print buildOrder.index(buildStage)
         for component in buildStage:
             checkout(component)
-            change(component)
-            tag(component)
-            push(component)
+            changeAndCommit(component)
+            tagstr = tag(component)
+            push(component, tagstr)
 
         raw_input("Press Enter to continue...")
 
