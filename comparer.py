@@ -1,5 +1,13 @@
 
-import sys
+import sys, re
+import git
+
+def findHighestTag(component):
+    print 'findHighestTag'
+    repo = git.Repo(component)
+    tags = sorted(repo.tags, key=lambda t: t.commit.committed_datetime)
+    latest_tag = tags[-1]
+    return latest_tag
 
 def checkout(component):
     print 'checkout'
@@ -8,6 +16,11 @@ def change(component):
     print 'change' 
 
 def tag(component):
+    tag = findHighestTag(component)
+    print tag
+    p = re.compile('v(\d*).(\d*).(\d*)')
+    erg = p.match(tag)
+    print erg
     print 'tag' 
 
 def push(component):
